@@ -1,13 +1,16 @@
 package telematic.multiThreadServer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
-import telematic.dto.Message;
 import telematic.util.MessageUtil;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
 
 public class ServerClientThread extends Thread {
+
+    private final Logger LOG = LoggerFactory.getLogger(ServerClientThread.class);
 
     private Socket socket;
     private MessageUtil messageUtil;
@@ -20,19 +23,27 @@ public class ServerClientThread extends Thread {
     }
 
     public void run() {
-        Message message = new Message();
+        Long login = 0L;
         try (DataInputStream inStream = new DataInputStream(socket.getInputStream())) {
             DataOutputStream outStream = new DataOutputStream(socket.getOutputStream());
 
             while (true) {
                 String data = inStream.readLine();
+                char type = data.charAt(1);
 
-                switch (data.charAt(1)) {
+                switch (type) {
                     case 'L':
-                        message.setImei(Long.parseLong(data.substring(3, 18)));
+                        login = Long.parseLong(data.substring(3, 18));
                         break;
                     case 'D':
-                        messageUtil.fullPackage(message, data, jdbcTemplate);
+                        messageUtil.saveMessage(login, data.substring(3), jdbcTemplate);
+                        break;
+                    case 'S':
+                        messageUtil.saveMessage(login, data.substring(4), jdbcTemplate);
+                        break;
+                    case 'B':
+                        messageUtil.saveBlackBox(login, data.substring(3), jdbcTemplate);
+                        break;
                 }
 
                 System.out.println("Client send: " + data);
@@ -44,7 +55,7 @@ public class ServerClientThread extends Thread {
             }
         }
         catch (Exception e) {
-            System.out.println(e.toString());
+            LOG.info(e.getMessage());
         }
     }
 }

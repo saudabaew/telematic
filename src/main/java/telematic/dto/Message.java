@@ -8,19 +8,19 @@ import java.util.Date;
 @Data
 public class Message {
     private Long id;
-    private LocalDateTime timestamp_create;                          // отправлено MTU
-    private Double lat;                                     // широта
-    private Double lon;                                     // долгота
-    private String params;                                  // значения датчиков
+    private LocalDateTime timestamp_create;
+    private Double lat;
+    private Double lon;
+    private String params;
     private Double speed;
-    private Long imei;                                      // код imei
+    private Long imei;
     private Double hdop;
     private Integer input;
     private Integer output;
     private Integer satellites_count;
-    private Double altitude;
+    private Integer altitude;
     private Long flags;
     private Integer course;
-    private Date timestamp_edit;                            // получено ТП
+    private Date timestamp_edit;
     private Long unit;
 }
