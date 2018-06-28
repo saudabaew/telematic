@@ -1,0 +1,22 @@
+group 'com.rsm.socket'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'java'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    compileOnly 'org.projectlombok:lombok:1.16.20'
+    // https://mvnrepository.com/artifact/io.netty/netty-all
+    compile group: 'io.netty', name: 'netty-all', version: '4.1.25.Final'
+    compile group: 'org.springframework.boot', name: 'spring-boot-starter', version: '2.0.0.RELEASE'
+    //-- драйвер к БД
+    compile group: 'org.postgresql', name: 'postgresql', version: '42.1.4'
+    //-- библиотека для работы с БД
+    compile group: 'org.springframework.boot', name: 'spring-boot-starter-jdbc', version: '2.0.3.RELEASE'
+}
