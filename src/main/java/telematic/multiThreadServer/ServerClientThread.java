@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import telematic.util.MessageUtil;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
@@ -34,15 +35,32 @@ public class ServerClientThread extends Thread {
                 switch (type) {
                     case 'L':
                         login = Long.parseLong(data.substring(3, 18));
+                        //условие идентификации
+                        if (login != 123456789666666L) socket.close();
                         break;
                     case 'D':
-                        messageUtil.saveMessage(login, data.substring(3), jdbcTemplate);
+                        if (login != 0) {
+                            messageUtil.saveMessage(login, data.substring(3), jdbcTemplate);
+                        } else {
+                            socket.close();
+                        }
                         break;
                     case 'S':
-                        messageUtil.saveMessage(login, data.substring(4), jdbcTemplate);
+                        if (login != 0) {
+                            messageUtil.saveMessage(login, data.substring(4), jdbcTemplate);
+                        } else {
+                            socket.close();
+                        }
                         break;
                     case 'B':
-                        messageUtil.saveBlackBox(login, data.substring(3), jdbcTemplate);
+                        if (login != 0) {
+                            messageUtil.saveBlackBox(login, data.substring(3), jdbcTemplate);
+                        } else {
+                            socket.close();
+                        }
+                        break;
+                    default:
+                        socket.close();
                         break;
                 }
 
@@ -53,8 +71,7 @@ public class ServerClientThread extends Thread {
                 //inStream.close();
                 //serverClient.close();
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             LOG.info(e.getMessage());
         }
     }
