@@ -51,7 +51,7 @@ public class MessageUtil {
             if (lat2.equals("S")) lat = lat * (-1);
             message.setLat(lat);
         } catch (Exception e) {
-            LOG.info(e.getMessage());
+            e.printStackTrace();
         }
 
         //долгота
@@ -64,35 +64,35 @@ public class MessageUtil {
             if (lon2.equals("W")) lon = lon * (-1);
             message.setLon(lon);
         } catch (Exception e) {
-            LOG.info(e.getMessage());
+            e.printStackTrace();
         }
 
         //скорость
         try {
             message.setSpeed(Double.parseDouble(array[6]));
         } catch (NumberFormatException e) {
-            LOG.info(e.getMessage());
+            e.printStackTrace();
         }
 
         //курс
         try {
             message.setCourse(Integer.parseInt(array[7]));
         } catch (NumberFormatException e) {
-            LOG.info(e.getMessage());
+            e.printStackTrace();
         }
 
         //высота над уровнем моря
         try {
             message.setAltitude(Integer.parseInt(array[8]));
         } catch (NumberFormatException e) {
-            LOG.info(e.getMessage());
+            e.printStackTrace();
         }
 
         //количество спутников
         try {
             message.setSatellites_count(Integer.parseInt(array[9]));
         } catch (NumberFormatException e) {
-            LOG.info(e.getMessage());
+            e.printStackTrace();
         }
 
         if (array.length > 10) {
@@ -100,7 +100,7 @@ public class MessageUtil {
             try {
                 message.setHdop(Double.parseDouble(array[10]));
             } catch (NumberFormatException e) {
-                LOG.info(e.getMessage());
+                e.printStackTrace();
             }
 
             //цифровые входы
@@ -113,7 +113,7 @@ public class MessageUtil {
             try {
                 message.setParams(array[15]);
             } catch (Exception e) {
-                LOG.info(e.getMessage());
+                e.printStackTrace();
             }
         }
         return message;

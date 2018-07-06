@@ -1,16 +1,27 @@
 package telematic.multiThreadServer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 import telematic.util.MessageUtil;
 
-import javax.annotation.PostConstruct;
 import java.net.ServerSocket;
 import java.net.Socket;
 
 @Component
 public class MultithreadedSocketServer {
+
+    private static final Logger LOG = LoggerFactory.getLogger(MultithreadedSocketServer.class);
+
+    @Value("${spring.kafka.template.default-topic}")
+    private String topicName;
+
+    @Value("${server.socket}")
+    private Integer socketNumber;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -18,19 +29,22 @@ public class MultithreadedSocketServer {
     @Autowired
     private MessageUtil messageUtil;
 
-    @PostConstruct
+    @Autowired
+    private KafkaTemplate<String, String> kafkaTemplate;
+
     public void init() throws Exception {
         try {
-            ServerSocket server = new ServerSocket(6666);
-            System.out.println("Server started...");
+            ServerSocket server = new ServerSocket(socketNumber);
+            LOG.info("Server started on port: {}", socketNumber);
+
             while (true) {
-                Socket socket = server.accept();                          // сервер принимает запрос на подключение клиента
-                System.out.println("Client started!");
-                ServerClientThread sct = new ServerClientThread(socket, jdbcTemplate, messageUtil);  // отправляем запрос в отдельный поток
+                Socket socket = server.accept();
+                LOG.info("New client started!");
+                ServerClientThread sct = new ServerClientThread(socket, jdbcTemplate, messageUtil, kafkaTemplate, topicName);
                 sct.start();
             }
         } catch (Exception e) {
-            System.out.println(e.toString());
+            e.printStackTrace();
         }
     }
 }
