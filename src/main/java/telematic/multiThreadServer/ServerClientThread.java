@@ -7,6 +7,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import telematic.util.MessageUtil;
 
 import java.io.DataInputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 
 public class ServerClientThread extends Thread {
@@ -29,51 +30,95 @@ public class ServerClientThread extends Thread {
 
     public void run() {
         Long login = 0L;
+        String answer = "";
+        String flag = "";
         try (DataInputStream inStream = new DataInputStream(socket.getInputStream())) {
-
-            while (true) {
-                String data = inStream.readLine();
-                char type = data.charAt(1);
-
-                switch (type) {
-                    case 'L':
-                        login = Long.parseLong(data.substring(3, 18));
-                        //условие идентификации
-                        //if (login != 123456789666666L) socket.close();
-                        kafkaTemplate.send(topicName, data);
-                        break;
-                    case 'D':
-                        if (login != 0) {
-                            messageUtil.saveMessage(login, data.substring(3), jdbcTemplate);
+            try (OutputStream outputStream = socket.getOutputStream()) {
+                while (true) {
+                    String data = inStream.readLine();
+                    LOG.info("Client send: {}", data);
+                    switch (data.charAt(1)) {
+                        case 'L':
+                            try {
+                                if (data.charAt(3) != '2') {
+                                    login = Long.parseLong(data.substring(3, 18)); //IPS 1.1
+                                } else {
+                                    login = Long.parseLong(data.substring(7, 22)); //IPS 2.0
+                                }
+                            } catch (NumberFormatException e) {
+                                e.printStackTrace();
+                                outputStream.write("#AL#0\r\n".getBytes("UTF-8"));
+                                LOG.info("Server reply: #AL#0\r\n");
+                            }
                             kafkaTemplate.send(topicName, data);
-                        } else {
-                            socket.close();
-                        }
-                        break;
-                    case 'S':
-                        if (login != 0) {
-                            messageUtil.saveMessage(login, data.substring(4), jdbcTemplate);
-                            kafkaTemplate.send(topicName, data);
-                        } else {
-                            socket.close();
-                        }
-                        break;
-                    case 'B':
-                        if (login != 0) {
-                            messageUtil.saveBlackBox(login, data.substring(3), jdbcTemplate);
-                            kafkaTemplate.send(topicName, data);
-                        } else {
-                            socket.close();
-                        }
-                        break;
-                    default:
-                        socket.close();
-                        break;
+                            if (login == 0) break;
+                            outputStream.write("#AL#1\r\n".getBytes("UTF-8"));
+                            LOG.info("Server reply: #AL#1");
+                            break;
+                        case 'S':
+                            answer = "#ASD#";
+                            if (login != 0) {
+                                try {
+                                    flag = messageUtil.saveMessage(login, data.substring(4), jdbcTemplate);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                    outputStream.write("#ASD#-1\r\n".getBytes("UTF-8"));
+                                    LOG.info("Server reply: #ASD#-1");
+                                    break;
+                                }
+                                answer = answer + flag;
+                                outputStream.write(answer.getBytes("UTF-8"));
+                                LOG.info("Server reply: {}", answer);
+                                kafkaTemplate.send(topicName, data);
+                            } else {
+                                socket.close();
+                            }
+                            break;
+                        case 'D':
+                            answer = "#AD#";
+                            if (login != 0) {
+                                try {
+                                    flag = messageUtil.saveMessage(login, data.substring(3), jdbcTemplate);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                    outputStream.write("#AD#-1\r\n".getBytes("UTF-8"));
+                                    LOG.info("Server reply: #AD#-1");
+                                    break;
+                                }
+                                answer = answer + flag;
+                                outputStream.write(answer.getBytes("UTF-8"));
+                                LOG.info("Server reply: {}", answer);
+                                kafkaTemplate.send(topicName, data);
+                            } else {
+                                socket.close();
+                            }
+                            break;
+                        case 'P':
+                            if (login != 0) {
+                                outputStream.write("#AP#\r\n".getBytes("UTF-8"));
+                                LOG.info("Server reply: #AP# from {}", login);
+                            }
+                            break;
+                        case 'B':
+                            if (login != 0) {
+                                String bData = data.substring(3);
+                                String[] message = bData.split("\\|");
+                                int count = message.length - 1;
+                                messageUtil.saveBlackBox(login, bData, jdbcTemplate);
+                                String bAnswer = "#AB#" + count + "\r\n";
+                                byte[] bAns = bAnswer.getBytes("UTF-8");
+                                outputStream.write(bAns);
+                                LOG.info("Server reply: {}", bAnswer);
+                                kafkaTemplate.send(topicName, data);
+                            } else {
+                                socket.close();
+                            }
+                            break;
+                    }
                 }
-                System.out.println("Client send: " + data);
             }
         } catch (Exception e) {
-            LOG.info(e.getMessage());
+            e.printStackTrace();
         }
     }
 }
