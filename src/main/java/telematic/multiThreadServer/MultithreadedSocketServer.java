@@ -8,6 +8,7 @@ import org.springframework.core.task.TaskExecutor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
+import telematic.checkSum.CRC16;
 import telematic.util.MessageUtil;
 
 import java.net.ServerSocket;
@@ -36,6 +37,9 @@ public class MultithreadedSocketServer {
     @Autowired
     private TaskExecutor taskExecutor;
 
+    @Autowired
+    private CRC16 crc16;
+
     public void init() throws Exception {
         try {
             ServerSocket server = new ServerSocket(socketNumber);
@@ -43,9 +47,7 @@ public class MultithreadedSocketServer {
             while (true) {
                 Socket socket = server.accept();
                 LOG.info("New client started!");
-                taskExecutor.execute(new ServerClientThread(socket, jdbcTemplate, messageUtil, kafkaTemplate, topicName));
-//                ServerClientThread sct = new ServerClientThread(socket, jdbcTemplate, messageUtil, kafkaTemplate, topicName);
-//                sct.start();
+                taskExecutor.execute(new ServerClientThread(socket, jdbcTemplate, messageUtil, kafkaTemplate, topicName, crc16));
             }
         } catch (Exception e) {
             e.printStackTrace();
