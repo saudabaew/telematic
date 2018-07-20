@@ -48,12 +48,12 @@ public class ServerClientThread extends Thread {
                             } catch (NumberFormatException e) {
                                 e.printStackTrace();
                                 outputStream.write("#AL#0\r\n".getBytes("UTF-8"));
-                                LOG.info("Server reply: #AL#0\r\n");
+                                LOG.info("Server reply: to {} #AL#0", login);
                             }
                             kafkaTemplate.send(topicName, data);
                             if (login == 0) break;
                             outputStream.write("#AL#1\r\n".getBytes("UTF-8"));
-                            LOG.info("Server reply: #AL#1");
+                            LOG.info("Server reply: to {} #AL#1", login);
                             break;
                         case 'S':
                             answer = "#ASD#";
@@ -63,12 +63,12 @@ public class ServerClientThread extends Thread {
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                     outputStream.write("#ASD#-1\r\n".getBytes("UTF-8"));
-                                    LOG.info("Server reply: #ASD#-1");
+                                    LOG.info("Server reply: to {} #ASD#-1", login);
                                     break;
                                 }
                                 answer = answer + flag;
                                 outputStream.write(answer.getBytes("UTF-8"));
-                                LOG.info("Server reply: {}", answer);
+                                LOG.info("Server reply: to {} answer {}", login, answer);
                                 kafkaTemplate.send(topicName, data);
                             } else {
                                 socket.close();
@@ -82,12 +82,12 @@ public class ServerClientThread extends Thread {
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                     outputStream.write("#AD#-1\r\n".getBytes("UTF-8"));
-                                    LOG.info("Server reply: #AD#-1");
+                                    LOG.info("Server reply: to {} #AD#-1", login);
                                     break;
                                 }
                                 answer = answer + flag;
                                 outputStream.write(answer.getBytes("UTF-8"));
-                                LOG.info("Server reply: {}", answer);
+                                LOG.info("Server reply: to {} answer {}", login, answer);
                                 kafkaTemplate.send(topicName, data);
                             } else {
                                 socket.close();
@@ -108,7 +108,7 @@ public class ServerClientThread extends Thread {
                                 String bAnswer = "#AB#" + count + "\r\n";
                                 byte[] bAns = bAnswer.getBytes("UTF-8");
                                 outputStream.write(bAns);
-                                LOG.info("Server reply: {}", bAnswer);
+                                LOG.info("Server reply: to {} answer {}", login, bAnswer);
                                 kafkaTemplate.send(topicName, data);
                             } else {
                                 socket.close();
